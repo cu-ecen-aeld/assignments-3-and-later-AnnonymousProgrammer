@@ -19,6 +19,6 @@ echo "(grep -r -c $2 $1 | wc -l)"
 hitcount=$(grep -r -c $2 $1 | wc -l)
 # count number of files containing the string
 echo "(find $1 -type f -print0 | xargs -0 grep -l $2 | wc -l)"
-filecount=$(find $1 -type f -print0 | xargs -0 grep -l $2 | wc -l)
+filecount=$(find $1 -type f | wc -l)
 
 echo "The number of files are $filecount and the number of matching lines are $hitcount"

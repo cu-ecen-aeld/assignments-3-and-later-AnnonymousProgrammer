@@ -103,58 +103,6 @@ bool do_exec_redirect(const char *outputfile, int count, ...)
  *
 */
 
-/**
-
-
-    int kidpid;
-    int status;
-
-    int fd = open(outputfile, O_CREAT | O_WRONLY | O_TRUNC, 0644);
-    if (fd < 0) {
-        perror("open");
-        abort();
-    }
-
-    switch (kidpid = fork()) {
-        case -1:
-            perror("fork");
-            abort();
-        case 0:
-            if (dup2(fd, 1) < 0) {
-                perror("dup2");
-                abort();
-            }
-            close(fd);
-            execvp(command[0], command);
-            perror("execvp");
-            abort();
-        default:
-            if (waitpid(kidpid, &status, 0) == -1) {
-                return false;
-            }
-            else if (WIFEXITED(status) && WEXITSTATUS(status) == 0) {
-                return true;
-            }
-    }
-
-    va_end(args);
-
-    return true;
-
-	if (dup2(outfile_desc, 1) < 0) {
-                perror("dup2");
-                abort();
-            }
-            close(outfile_desc);
-            execvp(command[0], command);
-            exit(-1);
-
-
-**/
-
-
-
-
 
     int outfile_desc = open(outputfile, O_WRONLY | O_CREAT | O_TRUNC, 0644);
     if(outfile_desc == -1) {
@@ -189,16 +137,4 @@ bool do_exec_redirect(const char *outputfile, int count, ...)
     return true;
 }
 
-/**
-int main(){
-
-	bool ret = do_exec(3, "/usr/bin/test","-f","/bin/echo");
-	if(ret){
-		printf("success\n");
-	}else{
-		printf("fail\n");
-	}
-	return 0;
-}
-**/
 

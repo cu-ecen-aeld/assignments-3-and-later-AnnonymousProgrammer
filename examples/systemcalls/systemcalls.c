@@ -49,6 +49,7 @@ bool do_exec(int count, ...)
     for(i=0; i<count; i++)
     {
         command[i] = va_arg(args, char *);
+        printf("%s \n", command[i]);
     }
     command[count] = NULL;
     // this line is to avoid a compile warning before your implementation is complete
@@ -69,12 +70,18 @@ bool do_exec(int count, ...)
     if(pid == 0){
     	// child
     	execv(command[0], &command[1]);
-    	exit(1);
+    	exit(-1);
     }else if(pid != -1){
     	// father
     	int wstatus;
     	int wait_ret_val = waitpid(pid, &wstatus, 0);
-    	return (WEXITSTATUS(wstatus) == 0) && (wait_ret_val == pid);
+    	if (wait_ret_val == -1){
+    		return -1;
+    	}else if(WIFEXITED(wstatus)){
+    		return WEXITSTATUS(wstatus) == 0;
+    	}else {
+    		return -1;
+    	}
     }else{
     	return false;
     }
@@ -112,20 +119,30 @@ bool do_exec_redirect(const char *outputfile, int count, ...)
  *   The rest of the behaviour is same as do_exec()
  *
 */
-
-    int fd = open(outputfile, O_WRONLY|O_TRUNC|O_CREAT, 0644);
     int pid = fork();
     if(pid == 0){
     	// child
-    	if (dup2(fd, 1) < 0) { perror("dup2"); abort(); }
-    	int ret_val = execv(command[0], &command[1]);
-    	close(fd);
-    	exit(ret_val);
+    	int outfile_desc = open("output.txt", O_WRONLY | O_CREAT | O_TRUNC, 0644);
+    	if(outfile_desc == -1) {
+    		exit(-1);
+    	}
+    	if(dup2(outfile_desc, STDOUT_FILENO) == -1){
+    		exit(-2);
+    	}
+    	execv(command[0], &command[1]);
+    	close(outfile_desc);
+    	exit(-3);
     }else if(pid != -1){
     	// father
     	int wstatus;
     	int wait_ret_val = waitpid(pid, &wstatus, 0);
-    	return WEXITSTATUS(wstatus) == 0 && wait_ret_val == pid;
+    	if (wait_ret_val == -1){
+    		return -1;
+    	}else if(WIFEXITED(wstatus)){
+    		return WEXITSTATUS(wstatus) == 0;
+    	}else {
+    		return -1;
+    	}
     }else{
     	return false;
     }
@@ -137,12 +154,14 @@ bool do_exec_redirect(const char *outputfile, int count, ...)
 
 /**
 int main(){
-	bool ret = do_exec(2, "echo", "fuck");
+
+	bool ret = do_exec(3, "/usr/bin/test","-f","/bin/echo");
 	if(ret){
-		printf("success");
+		printf("success\n");
 	}else{
-		printf("fail");
+		printf("fail\n");
 	}
 	return 0;
 }
 **/
+

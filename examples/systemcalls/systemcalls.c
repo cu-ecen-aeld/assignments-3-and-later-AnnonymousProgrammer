@@ -52,20 +52,6 @@ bool do_exec(int count, ...)
         printf("%s \n", command[i]);
     }
     command[count] = NULL;
-    // this line is to avoid a compile warning before your implementation is complete
-    // and may be removed
-    command[count] = command[count];
-
-/*
- * TODO:
- *   Execute a system command by calling fork, execv(),
- *   and wait instead of system (see LSP page 161).
- *   Use the command[0] as the full path to the command to execute
- *   (first argument to execv), and use the remaining arguments
- *   as second argument to the execv() command.
- *
-*/
-
     int pid = fork();
     if(pid == 0){
     	// child
@@ -108,25 +94,40 @@ bool do_exec_redirect(const char *outputfile, int count, ...)
     }
     command[count] = NULL;
 
+
+/*
+ * TODO
+ *   Call execv, but first using https://stackoverflow.com/a/13784315/1446624 as a refernce,
+ *   redirect standard out to a file specified by outputfile.
+ *   The rest of the behaviour is same as do_exec()
+ *
+*/
+
+/**
+
+
     int kidpid;
     int status;
 
     int fd = open(outputfile, O_CREAT | O_WRONLY | O_TRUNC, 0644);
     if (fd < 0) {
-        return false;
+        perror("open");
+        abort();
     }
 
     switch (kidpid = fork()) {
         case -1:
-            exit(-1);
+            perror("fork");
+            abort();
         case 0:
             if (dup2(fd, 1) < 0) {
-                exit(-1);
+                perror("dup2");
+                abort();
             }
             close(fd);
             execvp(command[0], command);
             perror("execvp");
-            exit(-1);
+            abort();
         default:
             if (waitpid(kidpid, &status, 0) == -1) {
                 return false;
@@ -134,6 +135,44 @@ bool do_exec_redirect(const char *outputfile, int count, ...)
             else if (WIFEXITED(status) && WEXITSTATUS(status) == 0) {
                 return true;
             }
+    }
+
+    va_end(args);
+
+    return true;
+
+**/
+
+
+
+
+
+    int outfile_desc = open(outputfile, O_WRONLY | O_CREAT | O_TRUNC, 0644);
+    if(outfile_desc == -1) {
+    		exit(-1);
+    }
+    int pid = fork();
+    if(pid == 0){
+	if (dup2(outfile_desc, 1) < 0) {
+                perror("dup2");
+                abort();
+            }
+            close(outfile_desc);
+            execvp(command[0], command);
+            exit(-1);
+    }else if(pid != -1){
+    	// father
+    	int wstatus;
+    	int wait_ret_val = waitpid(pid, &wstatus, 0);
+    	if (wait_ret_val == -1){
+    		return -1;
+    	}else if(WIFEXITED(wstatus)){
+    		return WEXITSTATUS(wstatus) == 0;
+    	}else {
+    		return -1;
+    	}
+    }else{
+    	return false;
     }
 
     va_end(args);

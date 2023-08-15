@@ -124,7 +124,7 @@ bool do_exec_redirect(const char *outputfile, int count, ...)
     	// father
     	int wstatus;
     	int wait_ret_val = waitpid(pid, &wstatus, 0);
-    	return *wstatus == 0 && wait_ret_val == pid;
+    	return wstatus == 0 && wait_ret_val == pid;
     }else{
     	return false;
     }

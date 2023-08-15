@@ -5,6 +5,8 @@
 #include <sys/wait.h>
 #include <fcntl.h>
 #include <stdio.h>
+#include <stdbool.h>
+#include <stdarg.h>
 #include "systemcalls.h"
 
 

@@ -69,7 +69,7 @@ bool do_exec(int count, ...)
     int pid = fork();
     if(pid == 0){
     	// child
-    	execv(command[0], &command[1]);
+    	execv(command[0], command);
     	exit(-1);
     }else if(pid != -1){
     	// father
@@ -119,18 +119,18 @@ bool do_exec_redirect(const char *outputfile, int count, ...)
  *   The rest of the behaviour is same as do_exec()
  *
 */
+    int outfile_desc = open("output.txt", O_WRONLY | O_CREAT | O_TRUNC, 0644);
+    if(outfile_desc == -1) {
+    		exit(-1);
+    }
     int pid = fork();
     if(pid == 0){
     	// child
-    	int outfile_desc = open("output.txt", O_WRONLY | O_CREAT | O_TRUNC, 0644);
-    	if(outfile_desc == -1) {
-    		exit(-1);
-    	}
-    	if(dup2(outfile_desc, STDOUT_FILENO) == -1){
+    	if(dup2(outfile_desc, 1) < 0){
     		exit(-2);
     	}
-    	execv(command[0], &command[1]);
     	close(outfile_desc);
+    	execv(command[0], command);
     	exit(-3);
     }else if(pid != -1){
     	// father

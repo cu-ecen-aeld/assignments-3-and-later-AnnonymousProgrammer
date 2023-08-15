@@ -1,15 +1,10 @@
 #include "systemcalls.h"
-
+#include <unistd.h>
 #include <stdlib.h>
 #include <sys/types.h>
-#include <unistd.h>
 #include <sys/wait.h>
-#include <sys/stat.h>
 #include <fcntl.h>
-
-
-// #include <sys/wait.h>
-// #include <fcntl.h>
+#include <stdio.h>
 
 /**
  * @param cmd the command to execute with system()
@@ -27,14 +22,8 @@ bool do_system(const char *cmd)
  *   and return a boolean true if the system() call completed with success
  *   or false() if it returned a failure
 */
-    bool ret;
-
-    ret = system(cmd);
-
-    if(ret == 0)
-        return true;
-    else
-        return false;
+    int ret_val = system(cmd);
+    return ret_val == 0;
 }
 
 /**
@@ -60,6 +49,7 @@ bool do_exec(int count, ...)
     for(i=0; i<count; i++)
     {
         command[i] = va_arg(args, char *);
+        printf("%s \n", command[i]);
     }
     command[count] = NULL;
     // this line is to avoid a compile warning before your implementation is complete
@@ -75,34 +65,30 @@ bool do_exec(int count, ...)
  *   as second argument to the execv() command.
  *
 */
-   
-    int status;
-    pid_t pid;
-    bool ret = false;
 
-    fflush(NULL);
-    pid = fork();
-
-    if(pid < 0){
-        perror("fork()");
-    }
-    else if(pid == 0){
-        execv(command[0], command);
-        exit(-1);
-    }
-    else if(pid > 0){
-        
-        pid = waitpid(pid, &status, 0);
-        
-        if(status == 0)
-            ret = true;
-        
+    int pid = fork();
+    if(pid == 0){
+    	// child
+    	execv(command[0], command);
+    	exit(-1);
+    }else if(pid != -1){
+    	// father
+    	int wstatus;
+    	int wait_ret_val = waitpid(pid, &wstatus, 0);
+    	if (wait_ret_val == -1){
+    		return -1;
+    	}else if(WIFEXITED(wstatus)){
+    		return WEXITSTATUS(wstatus) == 0;
+    	}else {
+    		return -1;
+    	}
+    }else{
+    	return false;
     }
 
     va_end(args);
 
-    // printf("\nreturn = %s\n\n", ret ? "true" : "false");
-    return ret;
+    return true;
 }
 
 /**
@@ -133,40 +119,49 @@ bool do_exec_redirect(const char *outputfile, int count, ...)
  *   The rest of the behaviour is same as do_exec()
  *
 */
-
-    int pid;
-    int status;
-    int ret = false;
-    int fd = open("testfile.txt", O_WRONLY|O_TRUNC|O_CREAT, 0644);
-
-    if (fd < 0) { 
-        perror("open"); 
-        exit(-1); 
+    int outfile_desc = open("output.txt", O_WRONLY | O_CREAT | O_TRUNC, 0644);
+    if(outfile_desc == -1) {
+    		exit(-1);
     }
-
-    fflush(NULL);
-    pid = fork();
-
-    if(pid < 0){
-        perror("fork()");
-    }
-    else if(pid == 0){
-        if (dup2(fd, 1) < 0) { 
-            perror("dup2"); 
-            exit(-1);
-        }
-        close(fd);
-        execv(command[0], command); 
-        exit(-1);
-    }
-    else if(pid > 0){
-        pid = waitpid(pid, &status, 0);        
-        if(status == 0) ret = true;        
-        close(fd);        
+    int pid = fork();
+    if(pid == 0){
+    	// child
+    	if(dup2(outfile_desc, 1) < 0){
+    		exit(-2);
+    	}
+    	close(outfile_desc);
+    	execv(command[0], command);
+    	exit(-3);
+    }else if(pid != -1){
+    	// father
+    	int wstatus;
+    	int wait_ret_val = waitpid(pid, &wstatus, 0);
+    	if (wait_ret_val == -1){
+    		return -1;
+    	}else if(WIFEXITED(wstatus)){
+    		return WEXITSTATUS(wstatus) == 0;
+    	}else {
+    		return -1;
+    	}
+    }else{
+    	return false;
     }
 
     va_end(args);
 
-    return ret;
+    return true;
 }
+
+/**
+int main(){
+
+	bool ret = do_exec(3, "/usr/bin/test","-f","/bin/echo");
+	if(ret){
+		printf("success\n");
+	}else{
+		printf("fail\n");
+	}
+	return 0;
+}
+**/
 

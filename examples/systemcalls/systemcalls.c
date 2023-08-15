@@ -1,14 +1,15 @@
 #include "systemcalls.h"
-#include <unistd.h>
+
 #include <stdlib.h>
 #include <sys/types.h>
+#include <unistd.h>
 #include <sys/wait.h>
+#include <sys/stat.h>
 #include <fcntl.h>
-#include <stdio.h>
-#include <stdbool.h>
-#include <stdarg.h>
-#include "systemcalls.h"
 
+
+// #include <sys/wait.h>
+// #include <fcntl.h>
 
 /**
  * @param cmd the command to execute with system()
@@ -21,13 +22,19 @@ bool do_system(const char *cmd)
 {
 
 /*
+ * TODO  add your code here
  *  Call the system() function with the command set in the cmd
  *   and return a boolean true if the system() call completed with success
  *   or false() if it returned a failure
 */
-	int x = system(cmd);
-	if (x<0) return false;
-	return true;
+    bool ret;
+
+    ret = system(cmd);
+
+    if(ret == 0)
+        return true;
+    else
+        return false;
 }
 
 /**
@@ -57,7 +64,7 @@ bool do_exec(int count, ...)
     command[count] = NULL;
     // this line is to avoid a compile warning before your implementation is complete
     // and may be removed
-    // command[count] = command[count];
+    command[count] = command[count];
 
 /*
  * TODO:
@@ -68,32 +75,34 @@ bool do_exec(int count, ...)
  *   as second argument to the execv() command.
  *
 */
+   
+    int status;
+    pid_t pid;
+    bool ret = false;
 
-    
-    pid_t kidpid = fork();
+    fflush(NULL);
+    pid = fork();
 
-    if (kidpid < 0)
-    {
-        // Failed to fork!
-        return false;
-    } else if (kidpid > 0)
-    {
-        int status;
-        pid_t x = waitpid(kidpid, &status, 0);
-        if (x < 0 || !(WIFEXITED(status) == true &&  WEXITSTATUS(status) == EXIT_SUCCESS))
-            return false;
-            
-    } 
-    else 
-    {
-        
-        execv(command[0], command);
+    if(pid < 0){
+        perror("fork()");
     }
-
+    else if(pid == 0){
+        execv(command[0], command);
+        exit(-1);
+    }
+    else if(pid > 0){
+        
+        pid = waitpid(pid, &status, 0);
+        
+        if(status == 0)
+            ret = true;
+        
+    }
 
     va_end(args);
 
-    return true;
+    // printf("\nreturn = %s\n\n", ret ? "true" : "false");
+    return ret;
 }
 
 /**
@@ -125,35 +134,39 @@ bool do_exec_redirect(const char *outputfile, int count, ...)
  *
 */
 
-    
-    int fd = open(outputfile, O_WRONLY|O_TRUNC|O_CREAT, 0644);
-    if (fd < 0) { perror("open"); abort(); }
-    int kidpid = fork();
-    if (kidpid < 0) 
-    {
-     perror("fork"); abort();
-    } 
-    else if (kidpid > 0) 
-    {
-        // We are the parent
-        close(fd);
-        // Wait for the kid and check the status
-        int status;
-        pid_t x = waitpid(kidpid, &status, 0);
-        if (x < 0 || !(WIFEXITED(status) == true &&  WEXITSTATUS(status) == EXIT_SUCCESS))
-            return false;
-    }
-    else
-    {
-        // Children
-        if (dup2(fd, 1) < 0) { perror("dup2"); abort(); }
-        close(fd);
-        execv(command[0], command);
+    int pid;
+    int status;
+    int ret = false;
+    int fd = open("testfile.txt", O_WRONLY|O_TRUNC|O_CREAT, 0644);
+
+    if (fd < 0) { 
+        perror("open"); 
+        exit(-1); 
     }
 
+    fflush(NULL);
+    pid = fork();
+
+    if(pid < 0){
+        perror("fork()");
+    }
+    else if(pid == 0){
+        if (dup2(fd, 1) < 0) { 
+            perror("dup2"); 
+            exit(-1);
+        }
+        close(fd);
+        execv(command[0], command); 
+        exit(-1);
+    }
+    else if(pid > 0){
+        pid = waitpid(pid, &status, 0);        
+        if(status == 0) ret = true;        
+        close(fd);        
+    }
 
     va_end(args);
 
-    return true;
+    return ret;
 }
 

@@ -119,7 +119,7 @@ bool do_exec_redirect(const char *outputfile, int count, ...)
  *   The rest of the behaviour is same as do_exec()
  *
 */
-    int outfile_desc = open("output.txt", O_WRONLY | O_CREAT | O_TRUNC, 0644);
+    int outfile_desc = open(outputfile, O_WRONLY | O_CREAT | O_TRUNC, 0644);
     if(outfile_desc == -1) {
     		exit(-1);
     }

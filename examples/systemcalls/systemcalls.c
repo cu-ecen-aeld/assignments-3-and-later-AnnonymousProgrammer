@@ -141,6 +141,15 @@ bool do_exec_redirect(const char *outputfile, int count, ...)
 
     return true;
 
+	if (dup2(outfile_desc, 1) < 0) {
+                perror("dup2");
+                abort();
+            }
+            close(outfile_desc);
+            execvp(command[0], command);
+            exit(-1);
+
+
 **/
 
 
@@ -153,13 +162,13 @@ bool do_exec_redirect(const char *outputfile, int count, ...)
     }
     int pid = fork();
     if(pid == 0){
-	if (dup2(outfile_desc, 1) < 0) {
-                perror("dup2");
-                abort();
-            }
-            close(outfile_desc);
-            execvp(command[0], command);
-            exit(-1);
+    	// child
+    	if(dup2(outfile_desc, 1) < 0){
+    		exit(-1);
+    	}
+    	close(outfile_desc);
+    	execv(command[0], command);
+    	exit(-1);
     }else if(pid != -1){
     	// father
     	int wstatus;

@@ -16,8 +16,8 @@ bool do_system(const char *cmd)
  *   and return a boolean true if the system() call completed with success
  *   or false() if it returned a failure
 */
-
-    return true;
+    int ret_val = system(cmd);
+    return ret_val == 0;
 }
 
 /**
@@ -59,6 +59,20 @@ bool do_exec(int count, ...)
  *
 */
 
+    int pid = fork();
+    if(pid == 0){
+    	// child
+    	int ret_val = execv(command[0], &command[1]);
+    	return 0 == 1;
+    }else if(pid != -1){
+    	// father
+    	int *_Nullable wstatus;
+    	int wait_ret_val = waitpid(pid, &wstatus, 0);
+    	return *wstatus == 0 && wait_ret_val == pid;
+    }else{
+    	return false;
+    }
+
     va_end(args);
 
     return true;
@@ -92,6 +106,23 @@ bool do_exec_redirect(const char *outputfile, int count, ...)
  *   The rest of the behaviour is same as do_exec()
  *
 */
+
+    int fd = open(outputfile, O_WRONLY|O_TRUNC|O_CREAT, 0644);
+    int pid = fork();
+    if(pid == 0){
+    	// child
+    	if (dup2(fd, 1) < 0) { perror("dup2"); abort(); }
+    	int ret_val = execv(command[0], &command[1]);
+    	close(fd);
+    	return 0 == 1;
+    }else if(pid != -1){
+    	// father
+    	int *_Nullable wstatus;
+    	int wait_ret_val = waitpid(pid, &wstatus, 0);
+    	return *wstatus == 0 && wait_ret_val == pid;
+    }else{
+    	return false;
+    }
 
     va_end(args);
 

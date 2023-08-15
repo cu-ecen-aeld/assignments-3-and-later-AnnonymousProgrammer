@@ -73,7 +73,7 @@ bool do_exec(int count, ...)
     	// father
     	int wstatus;
     	int wait_ret_val = waitpid(pid, &wstatus, 0);
-    	return wstatus == 0 && wait_ret_val == pid;
+    	return WEXITSTATUS(wstatus) == 0 && wait_ret_val == pid;
     }else{
     	return false;
     }

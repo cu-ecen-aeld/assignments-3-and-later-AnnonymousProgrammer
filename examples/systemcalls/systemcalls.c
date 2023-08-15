@@ -4,6 +4,7 @@
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <fcntl.h>
+#include <stdio.h>
 
 /**
  * @param cmd the command to execute with system()
@@ -68,12 +69,12 @@ bool do_exec(int count, ...)
     if(pid == 0){
     	// child
     	execv(command[0], &command[1]);
-    	return 1;
+    	exit(1);
     }else if(pid != -1){
     	// father
     	int wstatus;
     	int wait_ret_val = waitpid(pid, &wstatus, 0);
-    	return WEXITSTATUS(wstatus) == 0 && wait_ret_val == pid;
+    	return (WEXITSTATUS(wstatus) == 0) && (wait_ret_val == pid);
     }else{
     	return false;
     }
@@ -119,12 +120,12 @@ bool do_exec_redirect(const char *outputfile, int count, ...)
     	if (dup2(fd, 1) < 0) { perror("dup2"); abort(); }
     	int ret_val = execv(command[0], &command[1]);
     	close(fd);
-    	return ret_val;
+    	exit(ret_val);
     }else if(pid != -1){
     	// father
     	int wstatus;
     	int wait_ret_val = waitpid(pid, &wstatus, 0);
-    	return wstatus == 0 && wait_ret_val == pid;
+    	return WEXITSTATUS(wstatus) == 0 && wait_ret_val == pid;
     }else{
     	return false;
     }
@@ -133,3 +134,15 @@ bool do_exec_redirect(const char *outputfile, int count, ...)
 
     return true;
 }
+
+/**
+int main(){
+	bool ret = do_exec(2, "echo", "fuck");
+	if(ret){
+		printf("success");
+	}else{
+		printf("fail");
+	}
+	return 0;
+}
+**/

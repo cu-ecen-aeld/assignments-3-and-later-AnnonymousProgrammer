@@ -67,8 +67,8 @@ bool do_exec(int count, ...)
     int pid = fork();
     if(pid == 0){
     	// child
-    	int ret_val = execv(command[0], &command[1]);
-    	return ret_val;
+    	execv(command[0], &command[1]);
+    	return 1;
     }else if(pid != -1){
     	// father
     	int wstatus;

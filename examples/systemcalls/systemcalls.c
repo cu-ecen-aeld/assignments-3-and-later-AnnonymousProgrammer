@@ -71,9 +71,9 @@ bool do_exec(int count, ...)
     	return ret_val;
     }else if(pid != -1){
     	// father
-    	int * wstatus;
+    	int wstatus;
     	int wait_ret_val = waitpid(pid, &wstatus, 0);
-    	return *wstatus == 0 && wait_ret_val == pid;
+    	return wstatus == 0 && wait_ret_val == pid;
     }else{
     	return false;
     }
@@ -122,7 +122,7 @@ bool do_exec_redirect(const char *outputfile, int count, ...)
     	return ret_val;
     }else if(pid != -1){
     	// father
-    	int * wstatus;
+    	int wstatus;
     	int wait_ret_val = waitpid(pid, &wstatus, 0);
     	return *wstatus == 0 && wait_ret_val == pid;
     }else{

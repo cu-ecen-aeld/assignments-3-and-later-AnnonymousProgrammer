@@ -107,44 +107,33 @@ bool do_exec_redirect(const char *outputfile, int count, ...)
         command[i] = va_arg(args, char *);
     }
     command[count] = NULL;
-    // this line is to avoid a compile warning before your implementation is complete
-    // and may be removed
-    command[count] = command[count];
 
+    int kidpid;
+    int status;
 
-/*
- * TODO
- *   Call execv, but first using https://stackoverflow.com/a/13784315/1446624 as a refernce,
- *   redirect standard out to a file specified by outputfile.
- *   The rest of the behaviour is same as do_exec()
- *
-*/
-    int outfile_desc = open(outputfile, O_WRONLY | O_CREAT | O_TRUNC, 0644);
-    if(outfile_desc == -1) {
-    		exit(-1);
+    int fd = open(outputfile, O_CREAT | O_WRONLY | O_TRUNC, 0644);
+    if (fd < 0) {
+        return false;
     }
-    int pid = fork();
-    if(pid == 0){
-    	// child
-    	if(dup2(outfile_desc, 1) < 0){
-    		exit(-2);
-    	}
-    	close(outfile_desc);
-    	execv(command[0], command);
-    	exit(-3);
-    }else if(pid != -1){
-    	// father
-    	int wstatus;
-    	int wait_ret_val = waitpid(pid, &wstatus, 0);
-    	if (wait_ret_val == -1){
-    		return -1;
-    	}else if(WIFEXITED(wstatus)){
-    		return WEXITSTATUS(wstatus) == 0;
-    	}else {
-    		return -1;
-    	}
-    }else{
-    	return false;
+
+    switch (kidpid = fork()) {
+        case -1:
+            exit(-1);
+        case 0:
+            if (dup2(fd, 1) < 0) {
+                exit(-1);
+            }
+            close(fd);
+            execvp(command[0], command);
+            perror("execvp");
+            exit(-1);
+        default:
+            if (waitpid(kidpid, &status, 0) == -1) {
+                return false;
+            }
+            else if (WIFEXITED(status) && WEXITSTATUS(status) == 0) {
+                return true;
+            }
     }
 
     va_end(args);

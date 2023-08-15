@@ -68,10 +68,10 @@ bool do_exec(int count, ...)
     if(pid == 0){
     	// child
     	int ret_val = execv(command[0], &command[1]);
-    	return 0 == 1;
+    	return ret_val;
     }else if(pid != -1){
     	// father
-    	int *_Nullable wstatus;
+    	int * wstatus;
     	int wait_ret_val = waitpid(pid, &wstatus, 0);
     	return *wstatus == 0 && wait_ret_val == pid;
     }else{
@@ -119,10 +119,10 @@ bool do_exec_redirect(const char *outputfile, int count, ...)
     	if (dup2(fd, 1) < 0) { perror("dup2"); abort(); }
     	int ret_val = execv(command[0], &command[1]);
     	close(fd);
-    	return 0 == 1;
+    	return ret_val;
     }else if(pid != -1){
     	// father
-    	int *_Nullable wstatus;
+    	int * wstatus;
     	int wait_ret_val = waitpid(pid, &wstatus, 0);
     	return *wstatus == 0 && wait_ret_val == pid;
     }else{

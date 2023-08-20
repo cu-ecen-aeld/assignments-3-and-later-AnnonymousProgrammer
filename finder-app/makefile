@@ -1,6 +1,6 @@
 .PHONY: clean
 
-#CROSS_COMPILE := aarch64-none-linux-gnu-
+CROSS_COMPILE := aarch64-none-linux-gnu-
 CXX :=gcc
 CXXFLAGS := -c -g -Wall
 objs := writer.o

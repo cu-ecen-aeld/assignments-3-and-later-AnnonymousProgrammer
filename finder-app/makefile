@@ -1,17 +1,17 @@
 .PHONY: clean
 
-CROSS_COMPILE := aarch64-none-linux-gnu-gcc
+CC := aarch64-none-linux-gnu-gcc
 # CXX :=gcc
-MY_FLAGS := -c -g -Wall
+CFLAGS := -c -g -Wall
 objs := writer.o
 
 all: writer
 
 writer: $(objs)
-	$(CROSS_COMPILE) -o $@ $^
+	$(CC) -o $@ $^
 
 %.o: %.c
-	$(CROSS_COMPILE) $(MY_FLAGS) $<
+	$(CC) $(CFLAGS) $<
 
 clean:
 	rm -f $(objs)

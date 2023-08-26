@@ -10,6 +10,25 @@ WRITESTR=AELD_IS_FUN
 WRITEDIR=/tmp/aeld-data
 username=$(cat conf/username.txt)
 
+export PATH="/etc/finder-app/conf:$PATH"
+export PATH="/etc/finder-app/conf:$PATH"
+export PATH="/home/finder-app:$PATH"
+
+local=1
+prefix="./"
+if [ ! -d "/etc/finder-app/conf" ]
+then
+	echo "check of scripts locally"
+else
+	echo "check for scripts using PATH"
+	local=0
+	prefix=""
+fi
+
+
+#echo "${0} ${WRITEDIR} ${WRITESTR}  > /tmp/assignment4-result.txt"
+#$(./finder.sh "$WRITEDIR" "$WRITESTR") > /tmp/assignment4-result.txt
+
 if [ $# -lt 3 ]
 then
 	echo "Using default value ${WRITESTR} for string to write"
@@ -54,10 +73,13 @@ fi
 
 for i in $( seq 1 $NUMFILES)
 do
-	./writer "$WRITEDIR/${username}$i.txt" "$WRITESTR"
+	# if ${local}
+	${prefix}writer.sh "$WRITEDIR/${username}$i.txt" "$WRITESTR"
 done
 
-OUTPUTSTRING=$(./finder.sh "$WRITEDIR" "$WRITESTR")
+OUTPUTSTRING=$("$prefix"finder.sh "$WRITEDIR" "$WRITESTR")
+echo ${OUTPUTSTRING} > /tmp/assignment4-result.txt
+# $(./finder.sh "$WRITEDIR" "$WRITESTR") > /tmp/assignment4-result.txt
 
 # remove temporary directories
 rm -rf /tmp/aeld-data

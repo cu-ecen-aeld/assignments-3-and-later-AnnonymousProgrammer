@@ -11,7 +11,7 @@ writer: $(objs)
 	$(CC) -o $@ $^
 
 %.o: %.c
-	$(CC) $(CFLAGS) $<
+	$(CC) -c -g -Wall $<
 
 clean:
 	rm -f $(objs)

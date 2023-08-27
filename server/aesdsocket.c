@@ -35,7 +35,9 @@ int get_logfile_des(){
 
 int init_socket(){
     // Create a socket
+    int yes;
     sockfd = socket(AF_INET, SOCK_STREAM, 0);
+    setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(int));
     if(sockfd == -1){
         syslog(LOG_ERR, "socket file descriptor could not be created.");
         printf("socket file descriptor could not be created.\n");

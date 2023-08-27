@@ -98,6 +98,7 @@ void sig_handler(int signum) {
 
 
 int setup(){
+    remove(FILE_LOCATION);
     int ret;
     init_syslog();
     ret = get_logfile_des();

@@ -65,7 +65,7 @@ int init_socket(){
     freeaddrinfo(address_info);
     if(res != 0){
         syslog(LOG_ERR, "socket could not be bound.");
-        printf("socket could not be bound.\n");
+        printf("socket could not be bound: %i.\n", res);
         return 1;        
     }
     // start to listen
